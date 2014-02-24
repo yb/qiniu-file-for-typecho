@@ -4,7 +4,7 @@
  * 
  * @package Qiniu File
  * @author abelyao
- * @version 1.1.0
+ * @version 1.2.0
  * @link http://www.abelyao.com/
  * @date 2014-02-22
  */
@@ -43,6 +43,9 @@ class QiniuFile_Plugin implements Typecho_Plugin_Interface
 
         $domain = new Typecho_Widget_Helper_Form_Element_Text('domain', null, 'http://', _t('绑定域名：'), _t('以 http:// 开头，结尾不要加 / ！'));
         $form->addInput($domain->addRule('required', _t('请填写空间绑定的域名！'))->addRule('url', _t('您输入的域名格式错误！')));
+
+        $savepath = new Typecho_Widget_Helper_Form_Element_Text('savepath', null, '{year}/{month}/', _t('保存路径格式：'), _t('附件保存路径的格式，默认为 Typecho 的 {year}/{month}/ 格式，注意<strong style="color:#C33;">前面不要加 / </strong>！<br />可选参数：{year} 年份、{month} 月份、{day} 日期'));
+        $form->addInput($savepath->addRule('required', _t('请填写保存路径格式！')));
     }
 
 
@@ -100,7 +103,8 @@ class QiniuFile_Plugin implements Typecho_Plugin_Interface
         $date = new Typecho_Date(Typecho_Widget::widget('Widget_Options')->gmtTime);
 
         // 保存位置
-        $savename = $date->year . '/' . $date->month . '/' . sprintf('%u', crc32(uniqid())) . '.' . $ext;
+        $savepath = preg_replace(array('/\{year\}/', '/\{month\}/', '/\{day\}/'), array($date->year, $date->month, $date->day), $option->savepath);
+        $savename = $savepath . sprintf('%u', crc32(uniqid())) . '.' . $ext;
         if (isset($content))
         {
             $savename = $content['attachment']->path;
